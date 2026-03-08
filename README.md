@@ -2,10 +2,14 @@
 
 就職活動の企業管理・タスク管理・面接振り返りを一元管理するWebアプリです。
 
-## デモ
-https://xxxxx.vercel.app
+実際の就活では、応募企業、ES締切、面接振り返りなどの情報が分散しやすく、管理が煩雑になる課題があります。  
+その課題を解決するために、このアプリを開発しました。
 
-## 機能
+## デモ
+
+https://job-manager-mmdr.vercel.app
+
+## 主な機能
 
 ### 企業管理
 - 企業登録
@@ -15,32 +19,85 @@ https://xxxxx.vercel.app
 
 ### タスク管理
 - ES締切管理
-- 面接準備タスク
+- 面接準備タスク管理
 - 優先度表示
-- 締切警告
+- 締切が近いタスクの可視化
+- 編集 / 削除
 
 ### 面接振り返り
 - 質問記録
 - 自己評価
-- 改善点
+- 改善点の記録
 
 ## 技術スタック
 
-- Next.js
+- Next.js (App Router)
 - TypeScript
-- TailwindCSS
+- Tailwind CSS
 - LocalStorage
+- Vercel
+
+## アーキテクチャ / 構成
+
+このアプリは以下のような構成で実装しています。
+
+- `app/page.tsx`  
+  ダッシュボード画面
+
+- `app/companies/page.tsx`  
+  企業管理画面
+
+- `app/tasks/page.tsx`  
+  タスク管理画面
+
+- `app/reviews/page.tsx`  
+  面接振り返り画面
+
+- `app/components/`  
+  UIコンポーネント群
+
+- `types/`  
+  型定義ファイル群
+
+## 設計方針
+
+- コンポーネント分割による保守性向上
+- TypeScriptによる型安全な実装
+- CRUDを意識した画面設計
+- 状態管理の整理
+- 将来的なDB化を見据えたデータ構造設計
 
 ## 工夫した点
 
-- コンポーネント分割
-- TypeScript型管理
-- CRUD設計
-- 状態管理の整理
+### コンポーネント設計
+UIを再利用可能なコンポーネントに分割しました。
+
+例:
+- `TaskCard`
+- `CompanyCard`
+- `TaskForm`
+- `CompanyForm`
+
+### 型安全な設計
+TypeScriptで以下の型を定義し、データの整合性を意識して実装しました。
+
+- `Task`
+- `Company`
+- `Review`
+
+### UX改善
+- 締切が近いタスクを一覧で確認できる
+- 優先度や進捗状況を画面上で把握しやすい
+- ダッシュボードで情報を集約して確認できる
 
 ## 今後の改善
 
-- Prisma + PostgreSQL
-- 認証
+- Prisma + PostgreSQL によるDB化
+- 認証機能
 - カレンダー機能
-- ES管理
+- ES管理機能
+- 検索 / フィルタ機能
+
+## スクリーンショット
+
+今後追加予定
