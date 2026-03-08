@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { Task } from "../../types/task";
+import { Company } from "../../types/company";
 
 type TaskFormProps = {
+  companies: Company[];
   onAdd: (task: Task) => void;
 };
 
-export default function TaskForm({ onAdd }: TaskFormProps) {
+export default function TaskForm({ companies, onAdd }: TaskFormProps) {
   const [title, setTitle] = useState("");
-  const [company, setCompany] = useState("");
+  const [companyId, setCompanyId] = useState<number | null>(null);
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("高");
   const [status, setStatus] = useState("未着手");
@@ -17,7 +19,7 @@ export default function TaskForm({ onAdd }: TaskFormProps) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!title.trim() || !company.trim() || !dueDate.trim()) {
+    if (!title.trim() || companyId === null || !dueDate.trim()) {
       alert("タスク名・企業名・締切を入力してください。");
       return;
     }
@@ -25,7 +27,7 @@ export default function TaskForm({ onAdd }: TaskFormProps) {
     const newTask: Task = {
       id: Date.now(),
       title,
-      company,
+      companyId,
       dueDate,
       priority,
       status,
@@ -34,7 +36,7 @@ export default function TaskForm({ onAdd }: TaskFormProps) {
     onAdd(newTask);
 
     setTitle("");
-    setCompany("");
+    setCompanyId(null);
     setDueDate("");
     setPriority("高");
     setStatus("未着手");
@@ -58,13 +60,20 @@ export default function TaskForm({ onAdd }: TaskFormProps) {
 
         <div>
           <label className="mb-1 block text-sm font-medium">企業名</label>
-          <input
-            type="text"
-            placeholder="例: アクセンチュア"
+          <select
             className="w-full rounded-md border px-3 py-2"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-          />
+            value={companyId ?? ""}
+            onChange={(e) => setCompanyId(Number(e.target.value))}
+          >
+            <option value="" disabled>
+              企業を選択してください
+            </option>
+            {companies.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
