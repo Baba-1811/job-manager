@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 就活管理アプリ
 
-## Getting Started
+就職活動の企業管理・タスク管理・面接振り返りを一元管理するWebアプリです。
 
-First, run the development server:
+## デモ
+https://xxxxx.vercel.app
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 機能
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 企業管理
+- 企業登録
+- 志望度管理
+- 選考ステータス管理
+- 編集 / 削除
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### タスク管理
+- ES締切管理
+- 面接準備タスク
+- 優先度表示
+- 締切警告
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 面接振り返り
+- 質問記録
+- 自己評価
+- 改善点
 
-## Learn More
+## 技術スタック
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js
+- TypeScript
+- TailwindCSS
+- LocalStorage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 工夫した点
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- コンポーネント分割
+- TypeScript型管理
+- CRUD設計
+- 状態管理の整理
 
-## Deploy on Vercel
+## 今後の改善
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Prisma + PostgreSQL
+- 認証
+- カレンダー機能
+- ES管理
