@@ -1,7 +1,9 @@
 import { Task } from "../../types/task";
+import { Company } from "../../types/company";
 
 type UrgentTasksProps = {
   tasks: Task[];
+  companies: Company[];
 };
 
 function getDaysUntilDue(dueDate: string) {
@@ -15,7 +17,7 @@ function getDaysUntilDue(dueDate: string) {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
-export default function UrgentTasks({ tasks }: UrgentTasksProps) {
+export default function UrgentTasks({ tasks, companies }: UrgentTasksProps) {
   const urgentTasks = [...tasks]
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
     .slice(0, 5);
@@ -29,15 +31,20 @@ export default function UrgentTasks({ tasks }: UrgentTasksProps) {
           <p className="text-gray-500">タスクがまだ登録されていません。</p>
         ) : (
           urgentTasks.map((task) => {
+            const companyName =
+              companies.find((company) => company.id === task.companyId)?.name ??
+              "不明";
+
             const daysLeft = getDaysUntilDue(task.dueDate);
             const isOverdue = daysLeft < 0 && task.status !== "完了";
-            const isUrgent = daysLeft <= 3 && daysLeft >= 0 && task.status !== "完了";
+            const isUrgent =
+              daysLeft <= 3 && daysLeft >= 0 && task.status !== "完了";
 
             return (
               <div key={task.id} className="rounded-lg border p-4">
                 <p className="font-semibold">{task.title}</p>
                 <p className="text-sm text-gray-600">
-                  {task.company} / 締切: {task.dueDate} / 優先度: {task.priority}
+                  {companyName} / 締切: {task.dueDate} / 優先度: {task.priority}
                 </p>
 
                 <div className="mt-2">

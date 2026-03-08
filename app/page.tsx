@@ -52,7 +52,7 @@ export default function Home() {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <RecentCompanies companies={companies} />
-          <UrgentTasks tasks={tasks} />
+          <UrgentTasks tasks={tasks} companies={companies} />
         </div>
       </div>
     </main>
