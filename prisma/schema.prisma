@@ -8,18 +8,32 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  image     String?
+  createdAt DateTime  @default(now())
+  companies Company[]
+  tasks     Task[]
+  reviews   Review[]
+}
+
 model Company {
   id            Int      @id @default(autoincrement())
+  userId        String
   name          String
   industry      String
   interestLevel String
   status        String
   createdAt     DateTime @default(now())
   tasks         Task[]
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Task {
   id        Int      @id @default(autoincrement())
+  userId    String
   title     String
   companyId Int
   dueDate   String
@@ -27,10 +41,12 @@ model Task {
   status    String
   createdAt DateTime @default(now())
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Review {
   id            Int      @id @default(autoincrement())
+  userId        String
   companyName   String
   interviewDate String
   questions     String
@@ -40,4 +56,5 @@ model Review {
   nextAction    String
   rating        String
   createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
