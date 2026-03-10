@@ -5,75 +5,29 @@ import CompanyCard from "../components/CompanyCard";
 import CompanySummary from "../components/CompanySummary";
 import { Company } from "../../types/company";
 
-const initialCompanies: Company[] = [
-  {
-    id: 1,
-    name: "伊藤忠テクノソリューションズ",
-    industry: "SIer",
-    interestLevel: "高",
-    status: "応募前",
-  },
-  {
-    id: 2,
-    name: "アクセンチュア",
-    industry: "コンサル",
-    interestLevel: "中",
-    status: "ES提出済み",
-  },
-  {
-    id: 3,
-    name: "サイバーエージェント",
-    industry: "IT",
-    interestLevel: "高",
-    status: "面接予定",
-  },
-];
-
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingCompanyId, setEditingCompanyId] = useState<number | null>(null);
 
-  // フォーム
   const [name, setName] = useState("");
   const [industry, setIndustry] = useState("");
   const [interestLevel, setInterestLevel] = useState("高");
   const [status, setStatus] = useState("応募前");
 
-  // ★ 検索・フィルター用 state
   const [searchQuery, setSearchQuery] = useState("");
   const [filterInterest, setFilterInterest] = useState("すべて");
   const [filterStatus, setFilterStatus] = useState("すべて");
 
+  // DBから企業一覧を取得
   useEffect(() => {
-    const savedCompanies = localStorage.getItem("companies");
-    if (savedCompanies) {
-      try {
-        const parsed = JSON.parse(savedCompanies);
-        if (Array.isArray(parsed)) {
-          const validCompanies = parsed.filter(
-            (item) =>
-              item &&
-              typeof item.id === "number" &&
-              typeof item.name === "string" &&
-              typeof item.industry === "string" &&
-              typeof item.interestLevel === "string" &&
-              typeof item.status === "string"
-          );
-          setCompanies(validCompanies.length > 0 ? validCompanies : initialCompanies);
-        } else {
-          setCompanies(initialCompanies);
-        }
-      } catch {
-        setCompanies(initialCompanies);
-      }
-    } else {
-      setCompanies(initialCompanies);
-    }
+    fetch("/api/companies")
+      .then((res) => res.json())
+      .then((data) => {
+        setCompanies(data);
+        setLoading(false);
+      });
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("companies", JSON.stringify(companies));
-  }, [companies]);
 
   const resetForm = () => {
     setName("");
@@ -83,34 +37,40 @@ export default function CompaniesPage() {
     setEditingCompanyId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name.trim() || !industry.trim()) {
       alert("企業名と業界を入力してください。");
       return;
     }
+
     if (editingCompanyId !== null) {
-      setCompanies(companies.map((company) =>
-        company.id === editingCompanyId
-          ? { ...company, name, industry, interestLevel, status }
-          : company
-      ));
+      // 更新
+      const res = await fetch(`/api/companies/${editingCompanyId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, industry, interestLevel, status }),
+      });
+      const updated = await res.json();
+      setCompanies(companies.map((c) => (c.id === editingCompanyId ? updated : c)));
       resetForm();
       return;
     }
-    const newCompany: Company = {
-      id: Date.now(),
-      name,
-      industry,
-      interestLevel,
-      status,
-    };
+
+    // 新規追加
+    const res = await fetch("/api/companies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, industry, interestLevel, status }),
+    });
+    const newCompany = await res.json();
     setCompanies([newCompany, ...companies]);
     resetForm();
   };
 
-  const handleDeleteCompany = (id: number) => {
-    setCompanies(companies.filter((company) => company.id !== id));
+  const handleDeleteCompany = async (id: number) => {
+    await fetch(`/api/companies/${id}`, { method: "DELETE" });
+    setCompanies(companies.filter((c) => c.id !== id));
     if (editingCompanyId === id) resetForm();
   };
 
@@ -122,26 +82,32 @@ export default function CompaniesPage() {
     setStatus(company.status);
   };
 
-  // ★ フィルター・検索ロジック
   const filteredCompanies = useMemo(() => {
     return companies.filter((company) => {
       const matchesSearch =
         searchQuery === "" ||
         company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         company.industry.toLowerCase().includes(searchQuery.toLowerCase());
-
       const matchesInterest =
         filterInterest === "すべて" || company.interestLevel === filterInterest;
-
       const matchesStatus =
         filterStatus === "すべて" || company.status === filterStatus;
-
       return matchesSearch && matchesInterest && matchesStatus;
     });
   }, [companies, searchQuery, filterInterest, filterStatus]);
 
   const hasActiveFilter =
     searchQuery !== "" || filterInterest !== "すべて" || filterStatus !== "すべて";
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50 p-10">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-gray-500">読み込み中...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-10">
@@ -156,12 +122,10 @@ export default function CompaniesPage() {
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[380px_1fr]">
-          {/* 登録フォーム */}
           <section className="rounded-xl border bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-semibold">
               {editingCompanyId !== null ? "企業編集" : "企業登録"}
             </h2>
-
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label className="mb-1 block text-sm font-medium">企業名</label>
@@ -211,18 +175,11 @@ export default function CompaniesPage() {
                 </select>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="rounded-md bg-black px-4 py-2 text-white"
-                >
+                <button type="submit" className="rounded-md bg-black px-4 py-2 text-white">
                   {editingCompanyId !== null ? "更新する" : "登録する"}
                 </button>
                 {editingCompanyId !== null && (
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="rounded-md border px-4 py-2"
-                  >
+                  <button type="button" onClick={resetForm} className="rounded-md border px-4 py-2">
                     キャンセル
                   </button>
                 )}
@@ -230,18 +187,13 @@ export default function CompaniesPage() {
             </form>
           </section>
 
-          {/* 企業一覧 + 検索・フィルター */}
           <section>
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">登録済み企業</h2>
               {hasActiveFilter && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFilterInterest("すべて");
-                    setFilterStatus("すべて");
-                  }}
+                  onClick={() => { setSearchQuery(""); setFilterInterest("すべて"); setFilterStatus("すべて"); }}
                   className="text-sm text-gray-500 hover:text-black underline"
                 >
                   フィルターをリセット
@@ -249,13 +201,9 @@ export default function CompaniesPage() {
               )}
             </div>
 
-            {/* ★ 検索・フィルターUI */}
             <div className="mt-4 rounded-xl border bg-white p-4 shadow-sm space-y-3">
-              {/* テキスト検索 */}
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  🔍
-                </span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                 <input
                   type="text"
                   placeholder="企業名・業界で検索..."
@@ -264,13 +212,9 @@ export default function CompaniesPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-
-              {/* フィルター選択 */}
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
-                    志望度
-                  </label>
+                  <label className="mb-1 block text-xs font-medium text-gray-500">志望度</label>
                   <select
                     className="w-full rounded-md border px-3 py-2 text-sm"
                     value={filterInterest}
@@ -282,11 +226,8 @@ export default function CompaniesPage() {
                     <option>低</option>
                   </select>
                 </div>
-
                 <div className="flex-1">
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
-                    選考ステータス
-                  </label>
+                  <label className="mb-1 block text-xs font-medium text-gray-500">選考ステータス</label>
                   <select
                     className="w-full rounded-md border px-3 py-2 text-sm"
                     value={filterStatus}
@@ -302,32 +243,23 @@ export default function CompaniesPage() {
                   </select>
                 </div>
               </div>
-
-              {/* 件数表示 */}
-              <p className="text-xs text-gray-500">
-                {filteredCompanies.length} 件 / 全 {companies.length} 件
-              </p>
+              <p className="text-xs text-gray-500">{filteredCompanies.length} 件 / 全 {companies.length} 件</p>
             </div>
 
-            {/* 企業カード一覧 */}
             <div className="mt-4 space-y-4">
               {filteredCompanies.length === 0 ? (
                 <div className="rounded-xl border bg-white p-6 text-gray-500 shadow-sm">
-                  {hasActiveFilter
-                    ? "条件に一致する企業が見つかりません。"
-                    : "まだ企業が登録されていません。"}
+                  {hasActiveFilter ? "条件に一致する企業が見つかりません。" : "まだ企業が登録されていません。"}
                 </div>
               ) : (
-                filteredCompanies
-                  .filter(Boolean)
-                  .map((company) => (
-                    <CompanyCard
-                      key={company.id}
-                      company={company}
-                      onDelete={handleDeleteCompany}
-                      onEdit={handleEditCompany}
-                    />
-                  ))
+                filteredCompanies.map((company) => (
+                  <CompanyCard
+                    key={company.id}
+                    company={company}
+                    onDelete={handleDeleteCompany}
+                    onEdit={handleEditCompany}
+                  />
+                ))
               )}
             </div>
           </section>

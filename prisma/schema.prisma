@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Company {
@@ -14,5 +15,29 @@ model Company {
   interestLevel String
   status        String
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  tasks         Task[]
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  title     String
+  companyId Int
+  dueDate   String
+  priority  String
+  status    String
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id            Int      @id @default(autoincrement())
+  companyName   String
+  interviewDate String
+  questions     String
+  answers       String
+  goodPoints    String
+  improvements  String
+  nextAction    String
+  rating        String
+  createdAt     DateTime @default(now())
 }
