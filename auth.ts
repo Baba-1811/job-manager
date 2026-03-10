@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
+import { randomUUID } from "crypto";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: "HECoSgtUHqOtazGZMu5eC4CBHUdN8TirpwS1CflVq0M=",
@@ -18,7 +19,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         where: { email: user.email },
         update: { name: user.name, image: user.image },
         create: {
-          id: user.id!,
+          id: user.id ?? randomUUID(),
           email: user.email,
           name: user.name,
           image: user.image,
