@@ -6,6 +6,17 @@ import { randomUUID } from "crypto";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: "HECoSgtUHqOtazGZMu5eC4CBHUdN8TirpwS1CflVq0M=",
   trustHost: true,
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+  },
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
