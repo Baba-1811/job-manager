@@ -19,7 +19,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         where: { email: user.email },
         update: { name: user.name, image: user.image },
         create: {
-          id: user.id ?? randomUUID(),
+          id: randomUUID(),
           email: user.email,
           name: user.name,
           image: user.image,
@@ -27,8 +27,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       });
       return true;
     },
-    session({ session, token }) {
-      session.user.id = token.sub!;
+    async session({ session, token }) {
+      if (token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+        });
+        if (dbUser) {
+          session.user.id = dbUser.id;
+        }
+      }
       return session;
     },
   },
