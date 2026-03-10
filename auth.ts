@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET,
+  secret: "HECoSgtUHqOtazGZMu5eC4CBHUdN8TirpwS1CflVq0M=",
   trustHost: true,
   providers: [
     Google({
