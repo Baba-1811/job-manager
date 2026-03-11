@@ -20,11 +20,14 @@ export default function Header() {
           就活管理アプリ
         </Link>
 
-        {/* スマホ：ハンバーガー＋設定ボタン */}
+        {/* スマホ：設定＋ハンバーガー */}
         <div className="flex items-center gap-3 md:hidden">
           <div className="relative">
             <button
-              onClick={() => { setSettingsOpen(!settingsOpen); setMenuOpen(false); }}
+              onClick={() => {
+                setSettingsOpen(!settingsOpen);
+                setMenuOpen(false);
+              }}
               className="text-xl"
             >
               ⚙️
@@ -35,7 +38,10 @@ export default function Header() {
           </div>
           <button
             className="text-2xl"
-            onClick={() => { setMenuOpen(!menuOpen); setSettingsOpen(false); }}
+            onClick={() => {
+              setMenuOpen(!menuOpen);
+              setSettingsOpen(false);
+            }}
           >
             {menuOpen ? "✕" : "☰"}
           </button>
@@ -47,6 +53,7 @@ export default function Header() {
           <Link href="/companies" className="hover:underline">企業一覧</Link>
           <Link href="/tasks" className="hover:underline">タスク一覧</Link>
           <Link href="/reviews" className="hover:underline">面接振り返り</Link>
+          <Link href="/calendar" className="hover:underline">カレンダー</Link>
 
           {/* 設定ボタン（PC） */}
           <div className="relative ml-2">
@@ -82,6 +89,7 @@ export default function Header() {
           <Link href="/companies" onClick={() => setMenuOpen(false)}>企業一覧</Link>
           <Link href="/tasks" onClick={() => setMenuOpen(false)}>タスク一覧</Link>
           <Link href="/reviews" onClick={() => setMenuOpen(false)}>面接振り返り</Link>
+          <Link href="/calendar" onClick={() => setMenuOpen(false)}>カレンダー</Link>
           {session?.user && (
             <div className="flex items-center justify-between pt-2 border-t">
               <span className="text-gray-500">{session.user.name}</span>
