@@ -16,7 +16,6 @@ export default function ReviewsPage() {
   const [nextAction, setNextAction] = useState("");
   const [rating, setRating] = useState("3");
 
-  // DBから振り返り一覧を取得
   useEffect(() => {
     fetch("/api/reviews")
       .then((res) => res.json())
@@ -43,14 +42,10 @@ export default function ReviewsPage() {
       alert("企業名・面接日・質問・回答は必須です。");
       return;
     }
-
     const res = await fetch("/api/reviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        companyName, interviewDate, questions, answers,
-        goodPoints, improvements, nextAction, rating,
-      }),
+      body: JSON.stringify({ companyName, interviewDate, questions, answers, goodPoints, improvements, nextAction, rating }),
     });
     const newReview = await res.json();
     setReviews([newReview, ...reviews]);
@@ -64,7 +59,7 @@ export default function ReviewsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 p-10">
+      <main className="min-h-screen bg-gray-50 p-4 md:p-10">
         <div className="mx-auto max-w-6xl">
           <p className="text-gray-500">読み込み中...</p>
         </div>
@@ -73,14 +68,13 @@ export default function ReviewsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-10">
+    <main className="min-h-screen bg-gray-50 p-4 md:p-10">
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-3xl font-bold">面接振り返り一覧</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">面接振り返り一覧</h1>
         <p className="mt-3 text-gray-600">
           面接で聞かれたことや改善点を記録して、次回に活かします。
         </p>
-
-        <div className="mt-8 grid gap-8 lg:grid-cols-[380px_1fr]">
+        <div className="mt-8 grid gap-8 grid-cols-1 lg:grid-cols-[380px_1fr]">
           <section className="rounded-xl border bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-semibold">振り返り登録</h2>
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -152,11 +146,7 @@ export default function ReviewsPage() {
                           <p><span className="font-semibold">次回やること:</span> {review.nextAction}</p>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(review.id)}
-                        className="rounded-md border px-3 py-2 text-sm hover:bg-gray-100"
-                      >
+                      <button type="button" onClick={() => handleDelete(review.id)} className="rounded-md border px-3 py-2 text-sm hover:bg-gray-100">
                         削除
                       </button>
                     </div>

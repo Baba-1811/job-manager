@@ -19,7 +19,6 @@ export default function CompaniesPage() {
   const [filterInterest, setFilterInterest] = useState("すべて");
   const [filterStatus, setFilterStatus] = useState("すべて");
 
-  // DBから企業一覧を取得
   useEffect(() => {
     fetch("/api/companies")
       .then((res) => res.json())
@@ -43,9 +42,7 @@ export default function CompaniesPage() {
       alert("企業名と業界を入力してください。");
       return;
     }
-
     if (editingCompanyId !== null) {
-      // 更新
       const res = await fetch(`/api/companies/${editingCompanyId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -56,8 +53,6 @@ export default function CompaniesPage() {
       resetForm();
       return;
     }
-
-    // 新規追加
     const res = await fetch("/api/companies", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,10 +83,8 @@ export default function CompaniesPage() {
         searchQuery === "" ||
         company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         company.industry.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesInterest =
-        filterInterest === "すべて" || company.interestLevel === filterInterest;
-      const matchesStatus =
-        filterStatus === "すべて" || company.status === filterStatus;
+      const matchesInterest = filterInterest === "すべて" || company.interestLevel === filterInterest;
+      const matchesStatus = filterStatus === "すべて" || company.status === filterStatus;
       return matchesSearch && matchesInterest && matchesStatus;
     });
   }, [companies, searchQuery, filterInterest, filterStatus]);
@@ -101,7 +94,7 @@ export default function CompaniesPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 p-10">
+      <main className="min-h-screen bg-gray-50 p-4 md:p-10">
         <div className="mx-auto max-w-6xl">
           <p className="text-gray-500">読み込み中...</p>
         </div>
@@ -110,18 +103,16 @@ export default function CompaniesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-10">
+    <main className="min-h-screen bg-gray-50 p-4 md:p-10">
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-3xl font-bold">企業管理</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">企業管理</h1>
         <p className="mt-3 text-gray-600">
           企業情報・志望度・選考ステータスをまとめて管理します。
         </p>
-
         <div className="mt-8">
           <CompanySummary companies={companies} />
         </div>
-
-        <div className="mt-8 grid gap-8 lg:grid-cols-[380px_1fr]">
+        <div className="mt-8 grid gap-8 grid-cols-1 lg:grid-cols-[380px_1fr]">
           <section className="rounded-xl border bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-semibold">
               {editingCompanyId !== null ? "企業編集" : "企業登録"}
@@ -129,31 +120,15 @@ export default function CompaniesPage() {
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label className="mb-1 block text-sm font-medium">企業名</label>
-                <input
-                  type="text"
-                  placeholder="例: サイバーエージェント"
-                  className="w-full rounded-md border px-3 py-2"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                <input type="text" placeholder="例: サイバーエージェント" className="w-full rounded-md border px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">業界</label>
-                <input
-                  type="text"
-                  placeholder="例: IT / SIer / コンサル"
-                  className="w-full rounded-md border px-3 py-2"
-                  value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
-                />
+                <input type="text" placeholder="例: IT / SIer / コンサル" className="w-full rounded-md border px-3 py-2" value={industry} onChange={(e) => setIndustry(e.target.value)} />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">志望度</label>
-                <select
-                  className="w-full rounded-md border px-3 py-2"
-                  value={interestLevel}
-                  onChange={(e) => setInterestLevel(e.target.value)}
-                >
+                <select className="w-full rounded-md border px-3 py-2" value={interestLevel} onChange={(e) => setInterestLevel(e.target.value)}>
                   <option>高</option>
                   <option>中</option>
                   <option>低</option>
@@ -161,11 +136,7 @@ export default function CompaniesPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">選考ステータス</label>
-                <select
-                  className="w-full rounded-md border px-3 py-2"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
+                <select className="w-full rounded-md border px-3 py-2" value={status} onChange={(e) => setStatus(e.target.value)}>
                   <option>応募前</option>
                   <option>ES提出済み</option>
                   <option>Webテスト済み</option>
@@ -191,48 +162,29 @@ export default function CompaniesPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">登録済み企業</h2>
               {hasActiveFilter && (
-                <button
-                  type="button"
-                  onClick={() => { setSearchQuery(""); setFilterInterest("すべて"); setFilterStatus("すべて"); }}
-                  className="text-sm text-gray-500 hover:text-black underline"
-                >
+                <button type="button" onClick={() => { setSearchQuery(""); setFilterInterest("すべて"); setFilterStatus("すべて"); }} className="text-sm text-gray-500 hover:text-black underline">
                   フィルターをリセット
                 </button>
               )}
             </div>
-
             <div className="mt-4 rounded-xl border bg-white p-4 shadow-sm space-y-3">
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                <input
-                  type="text"
-                  placeholder="企業名・業界で検索..."
-                  className="w-full rounded-md border px-3 py-2 pl-9 text-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                <input type="text" placeholder="企業名・業界で検索..." className="w-full rounded-md border px-3 py-2 pl-9 text-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
               </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
+              <div className="flex gap-3 flex-wrap">
+                <div className="flex-1 min-w-[120px]">
                   <label className="mb-1 block text-xs font-medium text-gray-500">志望度</label>
-                  <select
-                    className="w-full rounded-md border px-3 py-2 text-sm"
-                    value={filterInterest}
-                    onChange={(e) => setFilterInterest(e.target.value)}
-                  >
+                  <select className="w-full rounded-md border px-3 py-2 text-sm" value={filterInterest} onChange={(e) => setFilterInterest(e.target.value)}>
                     <option>すべて</option>
                     <option>高</option>
                     <option>中</option>
                     <option>低</option>
                   </select>
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-[120px]">
                   <label className="mb-1 block text-xs font-medium text-gray-500">選考ステータス</label>
-                  <select
-                    className="w-full rounded-md border px-3 py-2 text-sm"
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                  >
+                  <select className="w-full rounded-md border px-3 py-2 text-sm" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                     <option>すべて</option>
                     <option>応募前</option>
                     <option>ES提出済み</option>
@@ -245,7 +197,6 @@ export default function CompaniesPage() {
               </div>
               <p className="text-xs text-gray-500">{filteredCompanies.length} 件 / 全 {companies.length} 件</p>
             </div>
-
             <div className="mt-4 space-y-4">
               {filteredCompanies.length === 0 ? (
                 <div className="rounded-xl border bg-white p-6 text-gray-500 shadow-sm">
@@ -253,12 +204,7 @@ export default function CompaniesPage() {
                 </div>
               ) : (
                 filteredCompanies.map((company) => (
-                  <CompanyCard
-                    key={company.id}
-                    company={company}
-                    onDelete={handleDeleteCompany}
-                    onEdit={handleEditCompany}
-                  />
+                  <CompanyCard key={company.id} company={company} onDelete={handleDeleteCompany} onEdit={handleEditCompany} />
                 ))
               )}
             </div>
