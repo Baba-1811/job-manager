@@ -42,6 +42,14 @@ export default function CalendarPage() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
+  // 編集モーダル
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editCompanyId, setEditCompanyId] = useState<number | null>(null);
+  const [editDueDate, setEditDueDate] = useState("");
+  const [editPriority, setEditPriority] = useState("高");
+  const [editStatus, setEditStatus] = useState("未着手");
+
   useEffect(() => {
     Promise.all([
       fetch("/api/tasks").then((r) => r.json()),
@@ -86,7 +94,7 @@ export default function CalendarPage() {
     setEvents([...taskEvents, ...reviewEvents]);
   };
 
-  // 日付クリック → 追加モーダルを開く
+  // 日付クリック → 追加モーダル
   const handleSelectSlot = ({ start }: { start: Date }) => {
     setSelectedDate(start);
     setNewTitle("");
@@ -118,7 +126,6 @@ export default function CalendarPage() {
     const updatedTasks = [newTask, ...tasks];
     setTasks(updatedTasks);
 
-    // カレンダーに反映
     const company = companies.find((c) => c.id === newTask.companyId);
     const color =
       newTask.priority === "高" ? "#ef4444"
@@ -143,6 +150,70 @@ export default function CalendarPage() {
     setDetailModalOpen(true);
   };
 
+  // 編集モーダルを開く
+  const handleOpenEdit = () => {
+    if (!selectedEvent || selectedEvent.type !== "task") return;
+    const task = selectedEvent.raw as Task;
+    setEditTitle(task.title);
+    setEditCompanyId(task.companyId);
+    setEditDueDate(task.dueDate);
+    setEditPriority(task.priority);
+    setEditStatus(task.status);
+    setDetailModalOpen(false);
+    setEditModalOpen(true);
+  };
+
+  // タスク更新
+  const handleUpdateTask = async () => {
+    if (!selectedEvent || selectedEvent.type !== "task") return;
+    const task = selectedEvent.raw as Task;
+    if (!editTitle.trim() || editCompanyId === null) {
+      alert("タスク名と企業名を入力してください。");
+      return;
+    }
+
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: editTitle,
+        companyId: editCompanyId,
+        dueDate: editDueDate,
+        priority: editPriority,
+        status: editStatus,
+      }),
+    });
+    const updated: Task = await res.json();
+
+    // tasksとeventsを更新
+    const updatedTasks = tasks.map((t) => (t.id === updated.id ? updated : t));
+    setTasks(updatedTasks);
+
+    const allReviews = events
+      .filter((e) => e.type === "review")
+      .map((e) => e.raw as Review);
+    buildEvents(updatedTasks, allReviews, companies);
+    setEditModalOpen(false);
+  };
+
+  // タスク削除
+  const handleDeleteTask = async () => {
+    if (!selectedEvent || selectedEvent.type !== "task") return;
+    const task = selectedEvent.raw as Task;
+    if (!confirm(`「${task.title}」を削除しますか？`)) return;
+
+    await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
+
+    const updatedTasks = tasks.filter((t) => t.id !== task.id);
+    setTasks(updatedTasks);
+
+    const allReviews = events
+      .filter((e) => e.type === "review")
+      .map((e) => e.raw as Review);
+    buildEvents(updatedTasks, allReviews, companies);
+    setDetailModalOpen(false);
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50 p-4 md:p-10">
@@ -161,7 +232,7 @@ export default function CalendarPage() {
       <div className="mx-auto max-w-6xl">
         <h1 className="text-2xl md:text-3xl font-bold">カレンダー</h1>
         <p className="mt-3 text-gray-600">
-          日付をクリックしてタスクを追加、イベントをクリックして詳細を確認できます。
+          日付をクリックしてタスクを追加、イベントをクリックして詳細・編集できます。
         </p>
 
         {/* 凡例 */}
@@ -227,12 +298,7 @@ export default function CalendarPage() {
           >
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold">タスクを追加</h2>
-              <button
-                onClick={() => setAddModalOpen(false)}
-                className="text-gray-400 hover:text-black text-xl"
-              >
-                ✕
-              </button>
+              <button onClick={() => setAddModalOpen(false)} className="text-gray-400 hover:text-black text-xl">✕</button>
             </div>
 
             <div className="mb-3">
@@ -376,51 +442,157 @@ export default function CalendarPage() {
                 </>
               )}
 
-              {selectedEvent.type === "review" && (
-                <>
-                  {(() => {
-                    const review = selectedEvent.raw as Review;
-                    return (
-                      <>
-                        <div>
-                          <p className="text-xs text-gray-400 mb-1">企業名</p>
-                          <p className="text-lg font-semibold">{review.companyName}</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-gray-400 mb-1">面接日</p>
-                            <p className="font-medium">{review.interviewDate}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400 mb-1">自己評価</p>
-                            <p className="font-medium">{"⭐".repeat(Number(review.rating))}</p>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400 mb-1">聞かれた質問</p>
-                          <p className="text-sm text-gray-700">{review.questions}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400 mb-1">良かった点</p>
-                          <p className="text-sm text-gray-700">{review.goodPoints}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400 mb-1">改善点</p>
-                          <p className="text-sm text-gray-700">{review.improvements}</p>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </>
-              )}
+              {selectedEvent.type === "review" && (() => {
+                const review = selectedEvent.raw as Review;
+                return (
+                  <>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">企業名</p>
+                      <p className="text-lg font-semibold">{review.companyName}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">面接日</p>
+                        <p className="font-medium">{review.interviewDate}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">自己評価</p>
+                        <p className="font-medium">{"⭐".repeat(Number(review.rating))}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">聞かれた質問</p>
+                      <p className="text-sm text-gray-700">{review.questions}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">良かった点</p>
+                      <p className="text-sm text-gray-700">{review.goodPoints}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">改善点</p>
+                      <p className="text-sm text-gray-700">{review.improvements}</p>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
-            <div className="px-6 pb-6">
+            {/* ボタン */}
+            <div className="px-6 pb-6 flex gap-3">
+              {selectedEvent.type === "task" && (
+                <>
+                  <button
+                    onClick={handleOpenEdit}
+                    className="flex-1 rounded-md bg-black px-4 py-2 text-white text-sm hover:opacity-80"
+                  >
+                    編集する
+                  </button>
+                  <button
+                    onClick={handleDeleteTask}
+                    className="flex-1 rounded-md border border-red-300 px-4 py-2 text-red-500 text-sm hover:bg-red-50"
+                  >
+                    削除する
+                  </button>
+                </>
+              )}
+              {selectedEvent.type === "review" && (
+                <button
+                  onClick={() => setDetailModalOpen(false)}
+                  className="w-full rounded-md border px-4 py-2 hover:bg-gray-50 text-sm"
+                >
+                  閉じる
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== 編集モーダル ===== */}
+      {editModalOpen && selectedEvent && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setEditModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-bold">タスクを編集</h2>
+              <button onClick={() => setEditModalOpen(false)} className="text-gray-400 hover:text-black text-xl">✕</button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium">タスク名</label>
+                <input
+                  type="text"
+                  className="w-full rounded-md border px-3 py-2"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">企業名</label>
+                <select
+                  className="w-full rounded-md border px-3 py-2"
+                  value={editCompanyId ?? ""}
+                  onChange={(e) => setEditCompanyId(Number(e.target.value))}
+                >
+                  {companies.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">締切日</label>
+                <input
+                  type="date"
+                  className="w-full rounded-md border px-3 py-2"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">優先度</label>
+                <select
+                  className="w-full rounded-md border px-3 py-2"
+                  value={editPriority}
+                  onChange={(e) => setEditPriority(e.target.value)}
+                >
+                  <option>高</option>
+                  <option>中</option>
+                  <option>低</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">ステータス</label>
+                <select
+                  className="w-full rounded-md border px-3 py-2"
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                >
+                  <option>未着手</option>
+                  <option>進行中</option>
+                  <option>完了</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
               <button
-                onClick={() => setDetailModalOpen(false)}
-                className="w-full rounded-md border px-4 py-2 hover:bg-gray-50 text-sm"
+                onClick={handleUpdateTask}
+                className="flex-1 rounded-md bg-black px-4 py-2 text-white hover:opacity-80"
               >
-                閉じる
+                更新する
+              </button>
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="flex-1 rounded-md border px-4 py-2 hover:bg-gray-50"
+              >
+                キャンセル
               </button>
             </div>
           </div>
