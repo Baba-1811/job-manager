@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/babashoutarou/job-manager/app -type d -not -path */node_modules/*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
