@@ -1,8 +1,8 @@
 # 就活管理アプリ（Job Manager）
 
-就職活動の情報を一元管理し、企業・タスク・面接を効率よく管理するWebアプリ
+就職活動の情報を一元管理し、企業・タスク・面接・カレンダーを効率よく管理するWebアプリ
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?logo=prisma)](https://www.prisma.io/)
@@ -50,15 +50,32 @@
 - タスク名・企業名のテキスト検索
 - 優先度・ステータス・企業によるフィルタリング
 
+### カレンダー機能
+- タスクの締切・面接日程をカレンダービューで一覧表示
+- 優先度に応じた色分け表示（高：赤 / 中：黄 / 低：グレー）
+- カレンダー上の日付クリックでタスクの新規追加
+- イベントクリックで詳細・編集・削除が可能なモーダル表示
+
 ### 面接振り返り
 - 面接で聞かれた質問・自分の回答を記録
 - 良かった点・改善点・次回やることの記録
 - 自己評価（1〜5段階）
 
+### 締切通知（メール）
+- 締切まで3日以内の未完了タスクを毎日23時にメール通知
+- Vercel Cron Jobs + Resend によって自動実行
+- 通知はユーザーごとに個別配信
+
 ### ダッシュボード
 - 総企業数・総タスク数・面接予定件数・高優先度タスク数をサマリー表示
 - 最近登録した企業の一覧
 - 直近の締切タスク一覧
+
+### 表示設定
+- 文字サイズの変更（小・中・大）
+- テーマカラーの変更（黒・青・緑・ローズ）
+- フォントの変更（ゴシック・明朝・等幅）
+- 設定はLocalStorageに保存され、再訪時も維持
 
 ---
 
@@ -66,12 +83,15 @@
 
 | カテゴリ | 技術 |
 |------|------|
-| フレームワーク | Next.js 16（App Router） |
+| フレームワーク | Next.js 15（App Router） |
 | 言語 | TypeScript |
 | スタイリング | Tailwind CSS |
 | 認証 | NextAuth.js beta（Auth.js v5）/ Google OAuth |
 | ORM | Prisma 5 |
 | データベース | PostgreSQL（Supabase） |
+| カレンダー | react-big-calendar / date-fns |
+| メール通知 | Resend |
+| バッチ処理 | Vercel Cron Jobs |
 | デプロイ | Vercel |
 
 ---
@@ -82,33 +102,50 @@
 job-manager/
 ├── app/
 │   ├── api/
-│   │   └── auth/[...nextauth]/
-│   │       └── route.ts           # NextAuth ハンドラー
+│   │   ├── auth/[...nextauth]/
+│   │   │   └── route.ts            # NextAuth ハンドラー
+│   │   ├── companies/route.ts      # 企業 CRUD API
+│   │   ├── tasks/route.ts          # タスク CRUD API
+│   │   ├── reviews/route.ts        # 振り返り CRUD API
+│   │   └── cron/notify/route.ts    # 締切通知バッチ（Vercel Cron）
+│   ├── calendar/
+│   │   └── page.tsx                # カレンダー画面
 │   ├── companies/
-│   │   └── page.tsx               # 企業管理画面
+│   │   └── page.tsx                # 企業管理画面
 │   ├── tasks/
-│   │   └── page.tsx               # タスク管理画面
+│   │   └── page.tsx                # タスク管理画面
 │   ├── reviews/
-│   │   └── page.tsx               # 面接振り返り画面
+│   │   └── page.tsx                # 面接振り返り画面
 │   ├── login/
-│   │   └── page.tsx               # ログイン画面
+│   │   └── page.tsx                # ログイン画面
 │   ├── components/
 │   │   ├── Header.tsx
 │   │   ├── CompanyCard.tsx
+│   │   ├── CompanyForm.tsx
+│   │   ├── CompanySummary.tsx
+│   │   ├── DashboardSummary.tsx
+│   │   ├── RecentCompanies.tsx
+│   │   ├── SettingsPanel.tsx       # 表示設定UI
+│   │   ├── SettingsWrapper.tsx
 │   │   ├── TaskCard.tsx
-│   │   └── DashboardSummary.tsx
+│   │   ├── TaskForm.tsx
+│   │   ├── TaskSummary.tsx
+│   │   └── UrgentTasks.tsx
+│   ├── contexts/
+│   │   └── SettingsContext.tsx     # 表示設定の状態管理
 │   ├── layout.tsx
-│   └── page.tsx                   # ダッシュボード
+│   └── page.tsx                    # ダッシュボード
 ├── prisma/
-│   └── schema.prisma              # DBスキーマ定義
+│   └── schema.prisma               # DBスキーマ定義
 ├── lib/
-│   └── prisma.ts                  # Prismaクライアント
+│   └── prisma.ts                   # Prismaクライアント
 ├── types/
 │   ├── company.ts
 │   ├── task.ts
 │   └── review.ts
-├── auth.ts                        # NextAuth設定
-└── middleware.ts                  # 認証ミドルウェア
+├── auth.ts                         # NextAuth設定
+├── vercel.json                     # Vercel Cron設定
+└── proxy.ts                        # 認証ミドルウェア
 ```
 
 ---
@@ -127,10 +164,17 @@ UIを再利用可能な単位でコンポーネント化しました。`CompanyC
 ### 認証設計
 NextAuth.js beta（Auth.js v5）を採用し、Googleアカウントによるログインを実装しました。サインイン時にPrismaでユーザーをupsertし、セッションにはDBのユーザーIDを紐付けることで、ユーザーごとのデータ管理を実現しています。
 
+### 締切通知の自動化
+Vercel Cron Jobs を使い、毎日23時に全ユーザーの締切タスクをチェックして自動メール配信しています。メール送信には Resend を採用し、`CRON_SECRET` によるリクエスト認証でセキュリティも確保しています。
+
+### 表示設定の永続化
+`SettingsContext` で文字サイズ・テーマカラー・フォントを一元管理し、`localStorage` に保存することで再訪時も設定が維持される仕組みにしています。
+
 ### UX面の配慮
 - 締切が3日以内のタスクは黄色ボーダー、超過済みは赤ボーダーで強調
 - フィルター中は「○件 / 全△件」で絞り込み状態を可視化
 - フィルターをワンクリックでリセットできるボタンを用意
+- スマホ・タブレットにも対応したレスポンシブデザイン
 
 ---
 
@@ -173,10 +217,15 @@ AUTH_URL=http://localhost:3000
 
 DATABASE_URL=your_supabase_database_url
 DIRECT_URL=your_supabase_direct_url
+
+RESEND_API_KEY=your_resend_api_key
+CRON_SECRET=your_cron_secret
 ```
 
 > Google OAuthのクライアントIDとシークレットは [Google Cloud Console](https://console.cloud.google.com/) で取得してください。
 > ローカル用のリダイレクトURIとして `http://localhost:3000/api/auth/callback/google` を登録する必要があります。
+
+> `RESEND_API_KEY` は [Resend](https://resend.com/) でアカウントを作成して取得してください。
 
 ### DBのマイグレーション
 
@@ -198,12 +247,14 @@ npm run dev
 
 | 機能 | 概要 | ステータス |
 |------|------|------|
-| 認証機能 | NextAuth.jsによるGoogleログイン対応、ユーザーごとのデータ管理 | 実装済み |
-| DB化（Prisma + PostgreSQL） | LocalStorageからDBへ移行し、データの永続化・複数端末対応を実現 | 実装済み |
-| カレンダー機能 | 面接日程・ES締切をカレンダービューで可視化 | 計画中 |
+| 認証機能 | NextAuth.jsによるGoogleログイン対応、ユーザーごとのデータ管理 | ✅ 実装済み |
+| DB化（Prisma + PostgreSQL） | LocalStorageからDBへ移行し、データの永続化・複数端末対応を実現 | ✅ 実装済み |
+| カレンダー機能 | タスク締切・面接日程をカレンダービューで可視化、追加・編集・削除対応 | ✅ 実装済み |
+| 締切通知メール | Vercel Cron + Resend で締切3日前にメール自動通知 | ✅ 実装済み |
+| スマホ対応（レスポンシブ） | モバイルでも快適に使えるUI改善 | ✅ 実装済み |
+| 表示設定 | 文字サイズ・テーマカラー・フォントをカスタマイズ | ✅ 実装済み |
 | Googleカレンダー連携 | Google Calendar APIを使って面接日程を自動同期 | 計画中 |
 | 企業情報自動補完 | 会社名入力で業界・規模などを自動取得（外部API連携） | 計画中 |
-| スマホ対応（レスポンシブ） | モバイルでも快適に使えるUI改善 | 計画中 |
 | 検索・フィルター強化 | 複合条件検索、並び替え機能の拡充 | 計画中 |
 
 ---
