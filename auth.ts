@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: "HECoSgtUHqOtazGZMu5eC4CBHUdN8TirpwS1CflVq0M=",
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
   cookies: {
     sessionToken: {
