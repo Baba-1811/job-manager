@@ -14,9 +14,10 @@ model User {
   name      String?
   image     String?
   createdAt DateTime  @default(now())
-  companies Company[]
-  tasks     Task[]
-  reviews   Review[]
+  companies   Company[]
+  tasks       Task[]
+  reviews     Review[]
+  entrySheets EntrySheet[]
 }
 
 model Company {
@@ -28,6 +29,7 @@ model Company {
   status        String
   createdAt     DateTime @default(now())
   tasks         Task[]
+  entrySheets   EntrySheet[]
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -57,4 +59,17 @@ model Review {
   rating        String
   createdAt     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EntrySheet {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  companyId Int
+  question  String
+  answer    String
+  charLimit Int?
+  status    String
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -53,6 +53,7 @@ export default function Header() {
           <Link href="/companies" className="hover:underline">企業一覧</Link>
           <Link href="/tasks" className="hover:underline">タスク一覧</Link>
           <Link href="/reviews" className="hover:underline">面接振り返り</Link>
+          <Link href="/entry-sheets" className="hover:underline">ES管理</Link>
           <Link href="/calendar" className="hover:underline">カレンダー</Link>
 
           {/* 設定ボタン（PC） */}
@@ -89,6 +90,7 @@ export default function Header() {
           <Link href="/companies" onClick={() => setMenuOpen(false)}>企業一覧</Link>
           <Link href="/tasks" onClick={() => setMenuOpen(false)}>タスク一覧</Link>
           <Link href="/reviews" onClick={() => setMenuOpen(false)}>面接振り返り</Link>
+          <Link href="/entry-sheets" onClick={() => setMenuOpen(false)}>ES管理</Link>
           <Link href="/calendar" onClick={() => setMenuOpen(false)}>カレンダー</Link>
           {session?.user && (
             <div className="flex items-center justify-between pt-2 border-t">
